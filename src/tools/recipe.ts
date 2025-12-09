@@ -74,16 +74,44 @@ export const RECIPE_TOOLS: Tool[] = [
   },
   {
     name: 'update_recipe',
-    description: 'Update recipe by ID. All fields optional except id',
+    description: 'Update recipe metadata and content. Only provide fields you want to update. All fields optional except id.',
     inputSchema: {
       type: 'object',
       properties: {
-        id: { type: 'number' },
-        name: { type: 'string' },
-        description: { type: 'string' },
-        servings: { type: 'number' },
-        working_time: { type: 'number' },
-        waiting_time: { type: 'number' },
+        id: { type: 'number', description: 'Recipe ID' },
+        name: { type: 'string', description: 'Recipe name' },
+        description: { type: 'string', description: 'Recipe description' },
+        servings: { type: 'number', description: 'Number of servings' },
+        servings_text: { type: 'string', description: 'Text description of servings' },
+        working_time: { type: 'number', description: 'Active working time in minutes' },
+        waiting_time: { type: 'number', description: 'Passive waiting time in minutes' },
+        keywords: { type: 'array', items: { type: 'string' }, description: 'Tags/keywords for the recipe' },
+        show_ingredient_overview: { type: 'boolean', description: 'Show ingredient overview' },
+        steps: {
+          type: 'array',
+          description: 'Recipe steps (full replacement if provided)',
+          items: {
+            type: 'object',
+            properties: {
+              instruction: { type: 'string' },
+              time: { type: 'number' },
+              ingredients: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    food: { type: 'string' },
+                    amount: { type: 'number' },
+                    unit: { type: 'string' },
+                    note: { type: 'string' },
+                  },
+                  required: ['food', 'amount'],
+                },
+              },
+            },
+            required: ['instruction', 'ingredients'],
+          },
+        },
       },
       required: ['id'],
     },
