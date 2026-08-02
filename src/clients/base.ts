@@ -2,6 +2,8 @@
 
 import { TandoorConfig } from '../types/index.js';
 
+const MAX_PAGES = 20; // Safety cap for auto-pagination
+
 export class BaseClient {
   protected baseUrl: string;
   protected token: string;
@@ -35,7 +37,7 @@ export class BaseClient {
 
       if (!response.ok) {
         let errorMessage = `Tandoor API error: ${response.status} ${response.statusText}`;
-        
+
         try {
           const errorData = await response.json();
           // Try to extract meaningful error messages from the response
@@ -83,5 +85,39 @@ export class BaseClient {
       }
       throw error;
     }
+  }
+
+  /**
+   * Fetch ALL pages of a paginated Tandoor endpoint.
+   *
+   * Tandoor's API defaults to 25 items per page with no warning — a naive
+   * single-page fetch silently returns a partial list. This loops until the
+   * server's `count` is reached (or `next` is null) so callers always see
+   * the full dataset.
+   */
+  protected async listAll<T>(
+    endpoint: string,
+    pageSize = 100
+  ): Promise<{ count: number; results: T[] }> {
+    const results: T[] = [];
+    let total = 0;
+
+    for (let page = 1; page <= MAX_PAGES; page++) {
+      const sep = endpoint.includes('?') ? '&' : '?';
+      const data = await this.request<{
+        count: number;
+        next: string | null;
+        results: T[];
+      }>(`${endpoint}${sep}page=${page}&page_size=${pageSize}`);
+
+      total = data.count ?? 0;
+      results.push(...(data.results || []));
+
+      if (data.next == null || results.length >= total) {
+        break;
+      }
+    }
+
+    return { count: total, results };
   }
 }

@@ -52,3 +52,12 @@ export interface AutoMealPlanResponse {
   created_meal_plans?: MealPlan[];
   message?: string;
 }
+
+/** Compact shopping list entry (names resolved, no nested objects). */
+export interface ShoppingListEntry {
+  id: number;
+  food: string;
+  amount: number;
+  unit: string | null;
+  checked: boolean;
+}

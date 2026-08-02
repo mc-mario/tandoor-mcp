@@ -3,14 +3,12 @@ import { Tool } from '@modelcontextprotocol/sdk/types.js';
 export const MEAL_PLAN_TOOLS: Tool[] = [
   {
     name: 'list_meal_plans',
-    description: 'List meal plans. Optional: from_date, to_date (YYYY-MM-DD), page, page_size',
+    description: 'List meal plans (auto-paginates). Optional: from_date, to_date (YYYY-MM-DD). When a date window is given, only entries STARTING inside the window are returned (overlapping entries from other weeks are filtered out).',
     inputSchema: {
       type: 'object',
       properties: {
-        from_date: { type: 'string' },
-        to_date: { type: 'string' },
-        page: { type: 'number' },
-        page_size: { type: 'number' },
+        from_date: { type: 'string', description: 'YYYY-MM-DD' },
+        to_date: { type: 'string', description: 'YYYY-MM-DD' },
       },
     },
   },
@@ -27,18 +25,18 @@ export const MEAL_PLAN_TOOLS: Tool[] = [
   },
   {
     name: 'create_meal_plan',
-    description: 'Create meal plan. Required: from_date (ISO), meal_type_id, servings. Optional: recipe_id, title, note, addshopping',
+    description: 'Create meal plan. Required: from_date (YYYY-MM-DD), meal_type_id, servings. Optional: recipe_id, title, note, addshopping (add ingredients to shopping list). Either recipe_id or title must be provided.',
     inputSchema: {
       type: 'object',
       properties: {
         recipe_id: { type: 'number' },
-        title: { type: 'string' },
+        title: { type: 'string', description: 'Free-text meal (when no recipe_id)' },
         servings: { type: 'number' },
-        from_date: { type: 'string' },
-        to_date: { type: 'string' },
-        meal_type_id: { type: 'number' },
+        from_date: { type: 'string', description: 'YYYY-MM-DD' },
+        to_date: { type: 'string', description: 'YYYY-MM-DD (same as from_date for single-day entries)' },
+        meal_type_id: { type: 'number', description: 'Use list_meal_types to find IDs' },
         note: { type: 'string' },
-        addshopping: { type: 'boolean' },
+        addshopping: { type: 'boolean', description: 'Add recipe ingredients to the shopping list' },
       },
       required: ['from_date', 'meal_type_id', 'servings'],
     },
@@ -90,6 +88,14 @@ export const MEAL_PLAN_TOOLS: Tool[] = [
   {
     name: 'list_meal_types',
     description: 'List available meal types (breakfast, lunch, dinner, etc.)',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+    },
+  },
+  {
+    name: 'get_shopping_list',
+    description: 'Get the current shopping list: id, food, amount, unit, checked.',
     inputSchema: {
       type: 'object',
       properties: {},
