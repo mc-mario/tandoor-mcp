@@ -150,3 +150,30 @@ export interface PaginatedRecipeList {
   previous: string | null;
   results: RecipeOverview[];
 }
+
+/** Compact food record for list/search results. */
+export interface FoodOverview {
+  id: number;
+  name: string;
+  plural_name?: string | null;
+}
+
+/** Compact unit record for list/search results. */
+export interface UnitOverview {
+  id: number;
+  name: string;
+  plural_name?: string | null;
+}
+
+/** Compact keyword record for list/search results. */
+export interface KeywordOverview {
+  id: number;
+  name: string;
+}
+
+/** Result of a find-or-create lookup: whether a new DB row was written. */
+export interface FoundRef {
+  id: number;
+  name: string;
+  created: boolean;
+}

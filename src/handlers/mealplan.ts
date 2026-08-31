@@ -3,12 +3,56 @@
 import { TandoorClient } from '../clients/index.js';
 import { MealPlan, MealType } from '../types/index.js';
 
+function compactMealPlan(m: any): any {
+  return {
+    id: m.id,
+    from_date: m.from_date?.slice(0, 10) ?? null,
+    to_date: m.to_date?.slice(0, 10) ?? null,
+    meal_type: m.meal_type?.name ?? null,
+    recipe_name: m.recipe?.name ?? m.recipe_name ?? null,
+    title: m.title ?? null,
+    servings: m.servings,
+    note: m.note ?? null,
+  };
+}
+
 export async function handleListMealPlans(
   client: TandoorClient,
   args: any
 ): Promise<string> {
-  const result = await client.mealPlans.listMealPlans(args);
-  return JSON.stringify(result, null, 2);
+  const { from_date, to_date, meal_type, ...rest } = args || {};
+
+  // Auto-paginates; Tandoor defaults to 25 items/page.
+  const result = await client.mealPlans.listAllMealPlans({
+    from_date,
+    to_date,
+    meal_type,
+  });
+
+  // The Tandoor API returns entries that OVERLAP the window, not only the
+  // ones that start inside it. When a window is requested, keep only entries
+  // whose from_date falls within [from_date, to_date] — that's what callers
+  // actually mean by "the plan for this week".
+  let entries = result.results;
+  if (from_date || to_date) {
+    const start = from_date ? from_date.slice(0, 10) : null;
+    const end = to_date ? to_date.slice(0, 10) : null;
+    entries = entries.filter((m: any) => {
+      const fd = m.from_date?.slice(0, 10) ?? null;
+      if (!fd) return false;
+      if (start && fd < start) return false;
+      if (end && fd > end) return false;
+      return true;
+    });
+  }
+
+  const compact = {
+    count: entries.length,
+    total_overlapping: result.count,
+    results: entries.map(compactMealPlan),
+  };
+
+  return JSON.stringify(compact, null, 2);
 }
 
 export async function handleGetMealPlan(
@@ -16,7 +60,7 @@ export async function handleGetMealPlan(
   args: { id: number }
 ): Promise<string> {
   const mealPlan = await client.mealPlans.getMealPlan(args.id);
-  return JSON.stringify(mealPlan, null, 2);
+  return JSON.stringify(compactMealPlan(mealPlan), null, 2);
 }
 
 export async function handleCreateMealPlan(
@@ -69,7 +113,10 @@ export async function handleCreateMealPlan(
   }
 
   const created = await client.mealPlans.createMealPlan(mealPlan);
-  return `Meal plan created successfully!\n\n${JSON.stringify(created, null, 2)}`;
+  return JSON.stringify({
+    message: 'Meal plan created successfully!',
+    meal_plan: compactMealPlan(created),
+  }, null, 2);
 }
 
 export async function handleUpdateMealPlan(
@@ -124,7 +171,10 @@ export async function handleUpdateMealPlan(
   }
 
   const updated = await client.mealPlans.patchMealPlan(id, updates);
-  return `Meal plan updated successfully!\n\n${JSON.stringify(updated, null, 2)}`;
+  return JSON.stringify({
+    message: 'Meal plan updated successfully!',
+    meal_plan: compactMealPlan(updated),
+  }, null, 2);
 }
 
 export async function handleDeleteMealPlan(
@@ -132,7 +182,7 @@ export async function handleDeleteMealPlan(
   args: { id: number }
 ): Promise<string> {
   await client.mealPlans.deleteMealPlan(args.id);
-  return `Meal plan ${args.id} deleted successfully!`;
+  return JSON.stringify({ message: `Meal plan ${args.id} deleted successfully!`, deleted: true, id: args.id }, null, 2);
 }
 
 export async function handleAutoMealPlan(
@@ -184,5 +234,25 @@ export async function handleListMealTypes(
   args: any
 ): Promise<string> {
   const mealTypes = await client.mealPlans.listMealTypes();
-  return JSON.stringify(mealTypes, null, 2);
+  return JSON.stringify({
+    count: mealTypes.length,
+    results: mealTypes.map((m: MealType) => ({ id: m.id, name: m.name, order: m.order })),
+  }, null, 2);
+}
+
+export async function handleGetShoppingList(
+  client: TandoorClient,
+  args: any
+): Promise<string> {
+  const result = await client.mealPlans.listShoppingList();
+  return JSON.stringify({
+    count: result.count,
+    results: result.results.map((e: any) => ({
+      id: e.id,
+      food: e.food?.name ?? null,
+      amount: e.amount ?? 0,
+      unit: e.unit?.name ?? null,
+      checked: e.checked ?? false,
+    })),
+  }, null, 2);
 }

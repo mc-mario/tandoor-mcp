@@ -45,6 +45,22 @@ export class TandoorClient {
   async findOrCreateUnit(...args: Parameters<RecipeClient['findOrCreateUnit']>) {
     return this.recipes.findOrCreateUnit(...args);
   }
+
+  async deleteRecipe(...args: Parameters<RecipeClient['deleteRecipe']>) {
+    return this.recipes.deleteRecipe(...args);
+  }
+
+  async listFoods(...args: Parameters<RecipeClient['listFoods']>) {
+    return this.recipes.listFoods(...args);
+  }
+
+  async listUnits(...args: Parameters<RecipeClient['listUnits']>) {
+    return this.recipes.listUnits(...args);
+  }
+
+  async listKeywords(...args: Parameters<RecipeClient['listKeywords']>) {
+    return this.recipes.listKeywords(...args);
+  }
 }
 
 // Re-export for convenience

@@ -1,11 +1,12 @@
 // Meal plan related API client
 
 import { BaseClient } from './base.js';
-import { 
-  MealPlan, 
-  PaginatedMealPlanList, 
+import {
+  MealPlan,
+  PaginatedMealPlanList,
   AutoMealPlan,
-  MealType 
+  MealType,
+  ShoppingListEntry,
 } from '../types/index.js';
 
 export class MealPlanClient extends BaseClient {
@@ -37,6 +38,34 @@ export class MealPlanClient extends BaseClient {
     const endpoint = `/api/meal-plan/${queryString ? `?${queryString}` : ''}`;
 
     return this.request<PaginatedMealPlanList>(endpoint);
+  }
+
+  /**
+   * List ALL meal plans across pages (Tandoor defaults to 25/page).
+   */
+  async listAllMealPlans(params?: {
+    from_date?: string;
+    to_date?: string;
+    meal_type?: number[];
+  }): Promise<{ count: number; results: MealPlan[] }> {
+    const searchParams = new URLSearchParams();
+
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          if (Array.isArray(value)) {
+            value.forEach(v => searchParams.append(key, v.toString()));
+          } else {
+            searchParams.append(key, value.toString());
+          }
+        }
+      });
+    }
+
+    const queryString = searchParams.toString();
+    const endpoint = `/api/meal-plan/${queryString ? `?${queryString}` : ''}`;
+
+    return this.listAll<MealPlan>(endpoint);
   }
 
   /**
@@ -108,5 +137,15 @@ export class MealPlanClient extends BaseClient {
    */
   async getMealType(id: number): Promise<MealType> {
     return this.request<MealType>(`/api/meal-type/${id}/`);
+  }
+
+  /**
+   * List all shopping list entries (across pages)
+   */
+  async listShoppingList(): Promise<{
+    count: number;
+    results: ShoppingListEntry[];
+  }> {
+    return this.listAll<ShoppingListEntry>('/api/shopping-list-entry/');
   }
 }

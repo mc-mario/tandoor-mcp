@@ -15,6 +15,10 @@ import {
   handleGetRecipe,
   handleCreateRecipe,
   handleUpdateRecipe,
+  handleDeleteRecipe,
+  handleListFoods,
+  handleListUnits,
+  handleListKeywords,
 } from './handlers/recipe.js';
 import {
   handleListMealPlans,
@@ -24,6 +28,7 @@ import {
   handleDeleteMealPlan,
   handleAutoMealPlan,
   handleListMealTypes,
+  handleGetShoppingList,
 } from './handlers/mealplan.js';
 
 // Load environment variables
@@ -88,6 +93,22 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         text = await handleUpdateRecipe(tandoorClient, args);
         break;
 
+      case 'delete_recipe':
+        text = await handleDeleteRecipe(tandoorClient, args as { id: number });
+        break;
+
+      case 'list_foods':
+        text = await handleListFoods(tandoorClient, args as { query?: string });
+        break;
+
+      case 'list_units':
+        text = await handleListUnits(tandoorClient, args as { query?: string });
+        break;
+
+      case 'list_keywords':
+        text = await handleListKeywords(tandoorClient, args as { query?: string });
+        break;
+
       // Meal plan tools
       case 'list_meal_plans':
         text = await handleListMealPlans(tandoorClient, args);
@@ -115,6 +136,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'list_meal_types':
         text = await handleListMealTypes(tandoorClient, args);
+        break;
+
+      case 'get_shopping_list':
+        text = await handleGetShoppingList(tandoorClient, args);
         break;
 
       default:
