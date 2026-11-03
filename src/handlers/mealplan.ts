@@ -139,7 +139,8 @@ export async function handleUpdateMealPlan(
   const updates: any = {};
 
   if (updateData.recipe_id !== undefined) {
-    updates.recipe = updateData.recipe_id;  // Just the ID
+    // recipe_id: null unlinks the recipe (the API's recipe field is nullable)
+    updates.recipe = updateData.recipe_id;
   }
 
   if (updateData.title !== undefined) {

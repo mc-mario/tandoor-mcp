@@ -43,12 +43,12 @@ export const MEAL_PLAN_TOOLS: Tool[] = [
   },
   {
     name: 'update_meal_plan',
-    description: 'Update meal plan. Required: id. All other fields optional',
+    description: 'Update meal plan. Required: id. All other fields optional. Set recipe_id: null to unlink the recipe.',
     inputSchema: {
       type: 'object',
       properties: {
         id: { type: 'number' },
-        recipe_id: { type: 'number' },
+        recipe_id: { type: ['number', 'null'], description: 'Recipe ID to link, or null to unlink' },
         title: { type: 'string' },
         servings: { type: 'number' },
         from_date: { type: 'string' },

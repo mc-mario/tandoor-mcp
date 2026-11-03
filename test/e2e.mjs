@@ -198,6 +198,10 @@ try {
   const mpUpdated = await call(client, 'update_meal_plan', { id: mpid, servings: 4 });
   check('update_meal_plan servings', mpUpdated.meal_plan.servings === 4);
 
+  const mpUnlinked = await call(client, 'update_meal_plan', { id: mpid, recipe_id: null });
+  check('update_meal_plan recipe_id: null unlinks recipe', mpUnlinked.meal_plan.recipe_name === null,
+    `recipe_name=${mpUnlinked.meal_plan.recipe_name}`);
+
   const delMp = await call(client, 'delete_meal_plan', { id: mpid });
   check('delete_meal_plan', delMp.deleted === true);
   createdMealPlanIds.pop();
