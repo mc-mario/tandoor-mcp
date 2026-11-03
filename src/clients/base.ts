@@ -38,19 +38,33 @@ export class BaseClient {
       if (!response.ok) {
         let errorMessage = `Tandoor API error: ${response.status} ${response.statusText}`;
 
+        // Read the body exactly once as text, then try to interpret it as JSON.
+        // A response stream can only be consumed once — calling response.json()
+        // and then response.text() in the catch throws "Body is unusable: Body
+        // has already been read", which masked the real error whenever the
+        // body wasn't valid JSON (e.g. Tandoor's HTML 500 page).
+        let bodyText = '';
         try {
-          const errorData = await response.json();
-          // Try to extract meaningful error messages from the response
-          if (errorData.detail) {
-            errorMessage += `\nDetail: ${errorData.detail}`;
-          } else if (typeof errorData === 'object') {
-            errorMessage += `\n${JSON.stringify(errorData, null, 2)}`;
-          }
+          bodyText = await response.text();
         } catch {
-          // If JSON parsing fails, try to get text
-          const errorText = await response.text();
-          if (errorText) {
-            errorMessage += `\n${errorText}`;
+          // Body unreadable — leave empty
+        }
+
+        if (bodyText) {
+          try {
+            const errorData = JSON.parse(bodyText);
+            // Try to extract meaningful error messages from the response
+            if (errorData?.detail) {
+              errorMessage += `\nDetail: ${errorData.detail}`;
+            } else if (typeof errorData === 'object') {
+              errorMessage += `\n${JSON.stringify(errorData, null, 2)}`;
+            } else {
+              errorMessage += `\n${bodyText}`;
+            }
+          } catch {
+            // Not JSON (e.g. an HTML error page) — include the raw text, truncated
+            const truncated = bodyText.length > 500 ? `${bodyText.slice(0, 500)}…` : bodyText;
+            errorMessage += `\n${truncated}`;
           }
         }
 
